@@ -1,0 +1,43 @@
+image: python:3.11
+
+pipelines:
+  default:
+    - step:
+        name: Build and Deploy to Elastic Beanstalk
+        image: python:3.11
+        caches:
+          - pip
+        script:
+          # Update and install necessary tools
+          - apt-get update && apt-get install -y zip
+          - apt-get install -y awscli
+
+          # Navigate to the directory with your repository's code
+          - cd .
+
+          # Install Python requirements
+          - pip install -r requirements.txt
+
+          # If you have any build or preparation steps, run them here.
+
+          # Create a ZIP archive of the current directory
+          - zip -r app.zip .
+
+          # (Optional) List the contents of the ZIP to verify
+          - unzip -l app.zip
+
+          # Configure AWS CLI
+          - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          - aws configure set default.region $AWS_REGION
+          - aws configure set default.output json
+
+          # Deploy to AWS Elastic Beanstalk
+          - aws s3 cp app.zip s3://$S3_BUCKET/app.zip
+          - aws elasticbeanstalk create-application-version --application-name $APPLICATION_NAME --version-label $BITBUCKET_BUILD_NUMBER --source-bundle S3Bucket=$S3_BUCKET,S3Key=app.zip
+          - aws elasticbeanstalk update-environment --application-name $APPLICATION_NAME --environment-name $ENVIRONMENT_NAME --version-label $BITBUCKET_BUILD_NUMBER
+
+definitions:
+  caches:
+    pip: ~/.cache/pip
+
