@@ -1,4 +1,4 @@
-# Word Segmentation API
+# Graduation Thesis Project - Backend
 
 This API provides endpoints for dividing words by syllables and morphemes. It utilizes the FastAPI framework and Python.
 
